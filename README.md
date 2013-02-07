@@ -5,7 +5,7 @@ This is a client library for accessing [Neo4j][], a graph database, from
 
 This library supports and has been tested against Neo4j 1.4 through Neo4j 1.8.
 
-This fork supports some basic spatial indexing support, which requires the 
+This fork supports some basic spatial indexing, which requires the 
 spatial plugin to be installed into neo4j. It can be downloaded at:
 https://github.com/neo4j/spatial/downloads
 
