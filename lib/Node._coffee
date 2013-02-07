@@ -50,14 +50,12 @@ module.exports = class Node extends PropertyContainer
                 , _
 
                 if response.statusCode isnt status.NO_CONTENT
+                    # database error
+                    message = response.body?.message
                     switch response.statusCode
-                        when status.BAD_REQUEST
-                            throw new Error 'Invalid data sent'
-                        when status.NOT_FOUND
-                            throw new Error 'Node not found'
-                        else
-                            throw response
-
+                        when status.BAD_REQUEST then message or= 'Invalid data sent'
+                        when status.NOT_FOUND then message or= 'Node not found'
+                    throw new Error message
             else
                 services = @db.getServices _
 
@@ -67,11 +65,9 @@ module.exports = class Node extends PropertyContainer
                 , _
 
                 if response.statusCode isnt status.CREATED
-                    switch response.statusCode
-                        when status.BAD_REQUEST
-                            throw new Error 'Invalid data sent'
-                        else
-                            throw response
+                    # database error
+                    message = response.body?.message or 'Invalid data sent'
+                    throw new Error message
 
                 # only update our copy of the data when it is POSTed.
                 @_data = response.body
@@ -161,6 +157,36 @@ module.exports = class Node extends PropertyContainer
         catch error
             throw adjustError error
 
+
+    addToSpatialLayer: (layer, _) ->
+        try
+            if not @exists
+                throw new Error 'Node must exists before indexing properties'
+    
+            services = @db.getServices _
+            
+            serviceUrl = services.extensions.SpatialPlugin.addNodeToLayer
+            
+            jsonData =
+              layer: layer
+              node: @self
+            
+            #console.log @self, @id
+            response = @_request.post
+                url: serviceUrl
+                json: jsonData
+            , _
+            
+            if response.statusCode isnt status.OK
+                throw response
+                
+            return response.body
+                
+
+        catch error
+            throw adjustError error
+
+
     #
     # Create and "return" (via callback) a relationship of the given type and
     # with the given properties from this node to another node.
@@ -218,16 +244,16 @@ module.exports = class Node extends PropertyContainer
                         type: type
                 , _
 
-                # client or database error:
                 if response.statusCode isnt status.CREATED
-                    {message, exception} = response.body or {}
-                    message or= exception or switch response.statusCode
+                    # database error
+                    message = ''
+                    switch response.statusCode
                         when status.BAD_REQUEST
-                            "Invalid createRelationship: #{from.id} #{type} #{to.id} w/ data: #{JSON.stringify data}"
+                            message = response.body?.message or
+                                      response.body?.exception or
+                                      "Invalid createRelationship: #{from.id} #{type} #{to.id} w/ data: #{JSON.stringify data}"
                         when status.CONFLICT
-                            '"to" node, or the node specified by the URI not found'
-                        else
-                            throw response  # e.g. internal server error
+                            message = '"to" node, or the node specified by the URI not found'
                     throw new Error message
 
                 # success

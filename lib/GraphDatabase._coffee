@@ -125,6 +125,96 @@ module.exports = class GraphDatabase
         catch error
             throw adjustError
 
+
+    #
+    # Create node index
+    #
+    # @param name {String}
+    # @param type {String}
+    # @param provider {String}
+    # @param callback {Function}
+    #
+    createNodeIndex: (name, type, provider, _) ->
+        try
+            services = @getServices _
+
+            type = type || 'exact'
+            provider = provider || 'lucene'
+
+            jsonData =
+              "name": name
+              "config":
+                "type": type
+                "provider": provider
+
+            response = @_request.post
+                uri: "#{services.node_index}/"
+                json: jsonData
+            , _
+
+            if response.statusCode isnt status.CREATED
+                # Database error
+                throw response
+
+            # Success
+            return response.body
+
+        catch error
+            throw adjustError error
+            
+            
+    createSimplePointLayer: (name, params, _) ->
+        try
+            services = @getServices _
+            
+            serviceUrl = services.extensions.SpatialPlugin.addSimplePointLayer
+            
+            jsonData =
+              "layer": name
+              
+            for key of params
+              jsonData[key] = params[key]
+              
+            response = @_request.post
+              uri: serviceUrl
+              json: jsonData
+            , _
+            
+            if response.statusCode isnt status.OK
+              throw response.body
+            
+            return response.body[0].data
+            
+            #console.log services
+        catch error
+            throw adjustError error
+
+    createSpatialIndex: (name, type, params, _) ->
+        try
+            services = @getServices _
+            
+            jsonData =
+              "name": name
+              "config":
+                "provider": 'spatial'
+                "geometry_type": type
+            
+            for key of params
+              jsonData.config[key] = params[key]
+            
+            response = @_request.post
+              uri: "#{services.node_index}/"
+              json: jsonData
+            , _
+            
+            if response.statusCode isnt status.CREATED
+                throw response
+                
+            return response.body
+            
+        catch error
+            throw adjustError error
+
     ### Nodes: ###
 
     #
