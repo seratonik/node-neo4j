@@ -6,7 +6,8 @@
     "contributors": [
         "Daniel Gasienica <daniel@gasienica.ch>",
         "Aseem Kishore <aseem.kishore@gmail.com>",
-        "Sergio Haro <sergio.haro.jr@gmail.com>"
+        "Sergio Haro <sergio.haro.jr@gmail.com>",
+        "Brent Luehr <brent@nerdcon.com>"
     ],
     "main": "./lib",
     "dependencies": {

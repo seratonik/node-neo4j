@@ -5,6 +5,9 @@ This is a client library for accessing [Neo4j][], a graph database, from
 
 This library supports and has been tested against Neo4j 1.4 through Neo4j 1.8.
 
+This fork supports some basic spatial indexing support, which requires the 
+spatial plugin to be installed into neo4j. It can be downloaded at:
+https://github.com/neo4j/spatial/downloads
 
 ## Installation
 
@@ -58,6 +61,46 @@ respect [semantic versioning][semver]. So if you specify this library as a
 dependency in your package.json, ***please* specify something like `0.2.x` or
 `~0.2.6`, *not* `>=0.2.6`**. Thanks. =)
 
+
+## Spatial Indexing Features
+
+This fork contains the following spatial features, here are some examples:
+
+Creation of a 'SimplePointLayer' called 'geom' which expects coordinates to be
+stored in node properties of 'lat' and 'lon':
+
+```js
+db.createSimplePointLayer('geom', { lat: 'lat', lon: 'lon' }, function(err, result) {
+    if (err) return console.log(err);
+    console.log(result);
+});
+```
+
+Creation of a spatial index also called 'geom' of type 'point' which also
+looks for coordinates stored in 'lat' and 'lon':
+
+```js
+db.createSpatialIndex('geom', 'point', { lat: 'lat', lon: 'lon' }, function(err, result) {
+    if (err) console.log(err);
+    console.log(result);
+}); 
+```
+
+Creation of a node, followed by its insertion into a SimplePointLayer
+called 'geom':
+
+```js
+var node = db.createNode({name:'A test location', lat:1.0, lon:2.0});
+node.save(function(err, node) {
+  if (err) return console.log(err);
+  
+  node.addToSpatialLayer('geom', function(err, result) {
+    if (err) return console.log(err);
+    console.log(result);
+  });
+  
+});
+```
 
 ## Development
 
