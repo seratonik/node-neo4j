@@ -157,31 +157,63 @@ module.exports = class Node extends PropertyContainer
         catch error
             throw adjustError error
 
+    deindex: (index, key, value, _) ->
+        try
+            if not @exists
+                throw new Error 'Node must exists before indexing properties'
+
+            services = @db.getServices _
+            version = @db.getVersion _
+
+            suffix = @id
+            if key and not value
+                encodedKey = encodeURIComponent key
+                suffix = "#{encodedKey}/#{@id}"
+            if key and value
+                encodedKey = encodeURIComponent key
+                encodedValue = encodeURIComponent value
+                suffix = "#{encodedKey}/#{encodedValue}/#{@id}"
+
+            response = @_request.del
+                url: "#{services.node_index}/#{index}/#{suffix}"
+            , _
+
+            if response.statusCode isnt status.NO_CONTENT
+                # database error
+                throw response
+
+            # success
+            return
+
+        catch error
+            throw adjustError error
+
+
 
     addToSpatialLayer: (layer, _) ->
         try
             if not @exists
                 throw new Error 'Node must exists before indexing properties'
-    
+
             services = @db.getServices _
-            
+
             serviceUrl = services.extensions.SpatialPlugin.addNodeToLayer
-            
+
             jsonData =
               layer: layer
               node: @self
-            
+
             #console.log @self, @id
             response = @_request.post
                 url: serviceUrl
                 json: jsonData
             , _
-            
+
             if response.statusCode isnt status.OK
                 throw response
-                
+
             return response.body
-                
+
 
         catch error
             throw adjustError error
